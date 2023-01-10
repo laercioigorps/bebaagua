@@ -8,27 +8,26 @@ from rest_framework import status
 
 # Create your views here.
 
-class CriarPerfilView(APIView):
 
+class CriarPerfilView(APIView):
     class PerfilSerializer(ModelSerializer):
         class Meta:
             model = Perfil
             fields = ["peso"]
 
-
     def post(self, request):
         perfilSerializer = self.PerfilSerializer(data=request.data)
-        if(perfilSerializer.is_valid()):
+        if perfilSerializer.is_valid():
             perfil = perfilSerializer.save()
             try:
                 usuario = get_user_model().objects.create_user(
-                    username=request.data["username"], 
+                    username=request.data["username"],
                     nome=request.data["nome"],
-                    perfil = perfil
+                    perfil=perfil,
                 )
             except Exception:
                 perfil.delete()
-                return Response(status=status.HTTP_400_BAD_REQUEST) 
+                return Response(status=status.HTTP_400_BAD_REQUEST)
         else:
             print(perfilSerializer.errors)
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -36,7 +35,7 @@ class CriarPerfilView(APIView):
             status=status.HTTP_201_CREATED,
             data={
                 "username": usuario.username,
-                "nome" : usuario.nome,
-                "perfil": perfilSerializer.data
+                "nome": usuario.nome,
+                "perfil": perfilSerializer.data,
             },
         )

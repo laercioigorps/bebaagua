@@ -10,10 +10,9 @@ from django.utils.translation import gettext_lazy as _
 class Perfil(models.Model):
     peso = models.DecimalField(max_digits=5, decimal_places=2)
 
+
 class User(AbstractUser):
     nome = CharField(blank=True, max_length=255)
     first_name = None  # type: ignore
     last_name = None  # type: ignore
     perfil = models.OneToOneField(Perfil, on_delete=models.CASCADE)
-
-
