@@ -11,7 +11,7 @@ class IFatorDeConsumoDeAgua(ABC):
         pass
 
 
-class FatorDeConsumoPeso:
+class FatorDeConsumoPeso(IFatorDeConsumoDeAgua):
     def __init__(self) -> None:
         self.indice = 0.75
 
