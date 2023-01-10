@@ -39,3 +39,22 @@ class CriarPerfilView(APIView):
                 "perfil": perfilSerializer.data,
             },
         )
+
+
+class ListarPerfisView(APIView):
+    class UserSerializer(ModelSerializer):
+        class PerfilSerializer(ModelSerializer):
+            class Meta:
+                model = Perfil
+                fields = ["peso"]
+
+        perfil = PerfilSerializer()
+
+        class Meta:
+            model = get_user_model()
+            fields = ["username", "nome", "perfil"]
+
+    def get(self, request):
+        perfis = get_user_model().objects.all()
+        serializer = self.UserSerializer(perfis, many=True)
+        return Response(data=serializer.data)
