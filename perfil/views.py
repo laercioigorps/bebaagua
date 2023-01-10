@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from .models import Perfil
 from rest_framework.serializers import ModelSerializer
 from rest_framework import status
+from recomendacao.models import GuiaDeHidratacaoPessoal
 
 # Create your views here.
 
@@ -17,8 +18,13 @@ class CriarPerfilView(APIView):
 
     def post(self, request):
         perfilSerializer = self.PerfilSerializer(data=request.data)
+        guia = GuiaDeHidratacaoPessoal.objects.create()
         if perfilSerializer.is_valid():
-            perfil = perfilSerializer.save()
+            perfil = perfilSerializer.save(guia=guia)
+            recomendacao = guia.calcular_recomendacao(perfil)
+            perfil.guia.recomendacao = recomendacao
+            perfil.guia.meta = recomendacao
+            guia.save()
             try:
                 usuario = get_user_model().objects.create_user(
                     username=request.data["username"],
@@ -29,7 +35,6 @@ class CriarPerfilView(APIView):
                 perfil.delete()
                 return Response(status=status.HTTP_400_BAD_REQUEST)
         else:
-            print(perfilSerializer.errors)
             return Response(status=status.HTTP_400_BAD_REQUEST)
         return Response(
             status=status.HTTP_201_CREATED,

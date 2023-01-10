@@ -56,3 +56,15 @@ def test_detalhar_perfil(apiClient, usuarioComPerfil):
     assert response.data["username"] == usuarioComPerfil.username
     assert response.data["nome"] == usuarioComPerfil.nome
     assert float(response.data["perfil"]["peso"]) == float(usuarioComPerfil.perfil.peso)
+
+
+@pytest.mark.django_db
+def test_criar_perfil_gera_recomendacao_de_consumo_e_meta(apiClient):
+    data = {"username": "newusername", "nome": "newuser name", "peso": "70"}
+    response = apiClient.post(reverse("perfil:criar_perfil"), data)
+    assert response.status_code == status.HTTP_201_CREATED
+    assert get_user_model().objects.count() == 1
+    
+    usuario = get_user_model().objects.get(username="newusername")
+    assert usuario.perfil.guia.recomendacao == 70*35
+    assert usuario.perfil.guia.meta == 70*35

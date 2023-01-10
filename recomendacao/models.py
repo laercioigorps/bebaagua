@@ -34,8 +34,8 @@ class FatorDeConsumoADM:
 
 
 class GuiaDeHidratacaoPessoal(models.Model):
-    recomendacao = models.DecimalField(max_digits=6, decimal_places=2)
-    meta = models.DecimalField(max_digits=6, decimal_places=2)
+    recomendacao = models.DecimalField(max_digits=6, decimal_places=2, null=True)
+    meta = models.DecimalField(max_digits=6, decimal_places=2, null=True)
 
     def calcular_recomendacao(self, perfil):
         total = 0
