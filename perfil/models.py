@@ -16,3 +16,7 @@ class User(AbstractUser):
     first_name = None  # type: ignore
     last_name = None  # type: ignore
     perfil = models.OneToOneField(Perfil, on_delete=models.CASCADE)
+
+
+
+
