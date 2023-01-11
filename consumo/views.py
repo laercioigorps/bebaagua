@@ -10,7 +10,7 @@ class ListarCoposView(APIView):
     class CopoSerializer(serializers.ModelSerializer):
         class Meta:
             model = Copo
-            fields = ['nome']
+            fields = '__all__'
 
 
     def get(self, request):
