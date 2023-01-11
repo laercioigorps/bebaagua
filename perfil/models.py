@@ -15,7 +15,7 @@ class User(AbstractUser):
     nome = CharField(blank=True, max_length=255)
     first_name = None  # type: ignore
     last_name = None  # type: ignore
-    perfil = models.OneToOneField(Perfil, on_delete=models.CASCADE)
+    perfil = models.OneToOneField(Perfil, on_delete=models.CASCADE, null=True)
 
 
 
