@@ -43,4 +43,34 @@ class RegistrarConsumoView(APIView):
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
         
+
+class ResumoConsumoView(APIView):
+    def get(self, request, username):
+        try:
+            user = get_user_model().objects.get(username=username)
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         
+        hoje_min = datetime.datetime.combine(datetime.date.today(), datetime.time.min)
+        hoje_max = datetime.datetime.combine(datetime.date.today(), datetime.time.max)
+        consumosDia = ConsumoDia.objects.filter(perfil=user.perfil).filter(data__range=(hoje_min, hoje_max))
+        if(consumosDia.exists()):
+            consumoDia = consumosDia.first()
+            consumo_restante = user.perfil.meta - consumoDia.consumo
+            if(consumo_restante < 0):
+                consumo_restante = 0
+
+            porcentagem_consumida_da_meta = consumoDia.consumo / user.perfil.meta *100
+            if porcentagem_consumida_da_meta > 100:
+                porcentagem_consumida_da_meta = 100
+            return Response(
+                data={
+                    "meta": user.perfil.meta,
+                    "consumo" : consumoDia.consumo,
+                    "consumo_restante" : consumo_restante,
+                    "porcentagem_consumida_da_meta" : porcentagem_consumida_da_meta,
+                    "meta_atingida" : consumoDia.is_meta_atingida
+                },
+            )
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
