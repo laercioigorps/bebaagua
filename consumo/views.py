@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
-from .models import Copo, ConsumoDia, Consumo
+from .models import ConsumoDia, Consumo
 from rest_framework import serializers
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model

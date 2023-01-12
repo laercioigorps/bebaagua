@@ -1,5 +1,5 @@
 import pytest
-from ..models import Copo, Consumo, ConsumoDia
+from ..models import Consumo, ConsumoDia
 from django.urls import reverse
 from rest_framework import status
 from datetime import datetime, date
