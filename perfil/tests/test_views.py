@@ -65,8 +65,7 @@ def test_criar_perfil_gera_recomendacao_de_consumo_e_meta(apiClient):
     assert get_user_model().objects.count() == 1
     
     usuario = get_user_model().objects.get(username="newusername")
-    assert usuario.perfil.guia.recomendacao == 2450
-    assert usuario.perfil.guia.meta == 2450
+    assert usuario.perfil.meta == 2450
 
 @pytest.mark.django_db
 def test_atualizar_perfil_atualiza_recomendacao_de_consumo(apiClient):
@@ -85,6 +84,6 @@ def test_atualizar_perfil_atualiza_recomendacao_de_consumo(apiClient):
     )
     assert response.status_code == status.HTTP_200_OK
     usuario = get_user_model().objects.get(username="newusername")
-    assert usuario.perfil.guia.recomendacao == 3500
-    assert usuario.perfil.guia.meta == 3500
+    assert usuario.perfil.meta == 3500
+
 

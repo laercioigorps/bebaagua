@@ -9,7 +9,10 @@ from django.utils.translation import gettext_lazy as _
 
 class Perfil(models.Model):
     peso = models.DecimalField(max_digits=5, decimal_places=2)
-    guia = models.OneToOneField("recomendacao.GuiaDeHidratacaoPessoal", on_delete=models.CASCADE, null=True)
+    meta =  models.PositiveIntegerField(default=0)
+
+    def calcular_meta(self):
+        return 35 * self.peso
 
 class User(AbstractUser):
     nome = CharField(blank=True, max_length=255)

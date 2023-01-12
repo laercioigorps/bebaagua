@@ -5,7 +5,6 @@ from django.contrib.auth import get_user_model
 from .models import Perfil
 from rest_framework.serializers import ModelSerializer
 from rest_framework import status
-from recomendacao.models import GuiaDeHidratacaoPessoal
 
 # Create your views here.
 
@@ -18,24 +17,22 @@ class CriarPerfilView(APIView):
 
     def post(self, request):
         perfilSerializer = self.PerfilSerializer(data=request.data)
-        guia = GuiaDeHidratacaoPessoal.objects.create()
         if perfilSerializer.is_valid():
-            perfil = perfilSerializer.save(guia=guia)
-            recomendacao = guia.calcular_recomendacao(perfil)
-            perfil.guia.recomendacao = recomendacao
-            perfil.guia.meta = recomendacao
-            guia.save()
+
             try:
                 usuario = get_user_model().objects.create_user(
                     username=request.data["username"],
                     nome=request.data["nome"],
-                    perfil=perfil,
                 )
             except Exception:
-                perfil.delete()
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+                return Response(status=status.HTTP_400_BAD_REQUEST, data={"erro": "usuário inválido"})
+            perfil = perfilSerializer.save()
+            perfil.meta = perfil.calcular_meta()
+            perfil.save()
+            usuario.perfil = perfil
+            usuario.save()
         else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_400_BAD_REQUEST,data=perfilSerializer.errors)
         return Response(
             status=status.HTTP_201_CREATED,
             data={
@@ -94,10 +91,8 @@ class DetalhePerfilView(APIView):
         userSerializer = self.UserSerializer(user)
         if perfilSerializer.is_valid():
             perfil = perfilSerializer.save()
-            recomendacao = perfil.guia.calcular_recomendacao(perfil)
-            user.perfil.guia.recomendacao = recomendacao
-            user.perfil.guia.meta = recomendacao
-            user.perfil.guia.save()
+            perfil.meta = perfil.calcular_meta()
+            perfil.save()
             userSerializer = self.UserSerializer(user)
             return Response(userSerializer.data)
         else:
