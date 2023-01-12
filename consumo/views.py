@@ -32,6 +32,8 @@ class RegistrarConsumoView(APIView):
             
             consumo = Consumo.objects.create(volume=serializer.validated_data["volume"], consumoDia = consumoDia)
             consumoDia.consumo += serializer.validated_data["volume"]
+            if(consumoDia.consumo >= user.perfil.meta):
+                consumoDia.is_meta_atingida = True
             consumoDia.save()
 
             return Response(status=status.HTTP_201_CREATED, data={

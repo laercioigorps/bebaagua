@@ -22,3 +22,12 @@ def test_consumir(apiClient, usuarioComPerfil):
     assert consumoDia.data == date.today()
     assert consumoDia.consumo == 1100
 
+def test_meta_consumoDia_atingida(apiClient, usuarioComPerfil):
+    response = apiClient.post(reverse("consumo:consumir_copo",kwargs={"username": usuarioComPerfil.username}),{"volume":250})
+    assert response.status_code == status.HTTP_201_CREATED
+    response = apiClient.post(reverse("consumo:consumir_copo",kwargs={"username": usuarioComPerfil.username}),{"volume":3500})
+    assert response.status_code == status.HTTP_201_CREATED
+
+    consumoDia = ConsumoDia.objects.all().filter(perfil=usuarioComPerfil.perfil).first()
+
+    assert consumoDia.is_meta_atingida == True
