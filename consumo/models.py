@@ -4,17 +4,13 @@ from django.contrib.auth.models import AbstractUser
 # Create your models here.
 
 class Perfil(models.Model):
+    username = models.CharField(unique=True, max_length=50)
+    nome = models.CharField(max_length=50)
     peso = models.DecimalField(max_digits=5, decimal_places=2)
     meta =  models.PositiveIntegerField(default=0)
 
     def calcular_meta(self):
         return 35 * self.peso
-
-class User(AbstractUser):
-    nome = models.CharField(blank=True, max_length=255)
-    first_name = None  # type: ignore
-    last_name = None  # type: ignore
-    perfil = models.OneToOneField(Perfil, on_delete=models.CASCADE, null=True)
 
 class ConsumoDia(models.Model):
     perfil = models.ForeignKey(Perfil, on_delete=models.CASCADE)

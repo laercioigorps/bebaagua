@@ -10,131 +10,104 @@ import datetime
 # Create your views here.
 
 
+def get_perfil(username):
+    try:
+        perfil = Perfil.objects.get(username=username)
+    except Exception:
+        perfil = None
+    return perfil
+
+
+class PerfilSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Perfil
+        fields = ["username", "nome", "peso", "meta"]
+
+
+class ConsumoSerializer(serializers.Serializer):
+        volume = serializers.IntegerField()
+
+
 class CriarPerfilView(APIView):
-    class PerfilSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = Perfil
-            fields = ["peso"]
-
     def post(self, request):
-        perfilSerializer = self.PerfilSerializer(data=request.data)
+        perfilSerializer = PerfilSerializer(data=request.data)
         if perfilSerializer.is_valid():
-
             try:
-                usuario = get_user_model().objects.create_user(
-                    username=request.data["username"],
-                    nome=request.data["nome"],
-                )
+                perfil = perfilSerializer.save()
             except Exception:
                 return Response(
                     status=status.HTTP_400_BAD_REQUEST,
                     data={"erro": "usuário inválido"},
                 )
-            perfil = perfilSerializer.save()
             perfil.meta = perfil.calcular_meta()
             perfil.save()
-            usuario.perfil = perfil
-            usuario.save()
+
+            return Response(status=status.HTTP_201_CREATED, data=perfilSerializer.data)
         else:
             return Response(
                 status=status.HTTP_400_BAD_REQUEST, data=perfilSerializer.errors
             )
-        return Response(
-            status=status.HTTP_201_CREATED,
-            data={
-                "username": usuario.username,
-                "nome": usuario.nome,
-                "perfil": perfilSerializer.data,
-            },
-        )
 
 
 class ListarPerfisView(APIView):
-    class UserSerializer(serializers.ModelSerializer):
-        class PerfilSerializer(serializers.ModelSerializer):
-            class Meta:
-                model = Perfil
-                fields = ["peso"]
-
-        perfil = PerfilSerializer()
-
-        class Meta:
-            model = get_user_model()
-            fields = ["username", "nome", "perfil"]
-
     def get(self, request):
-        perfis = get_user_model().objects.all()
-        serializer = self.UserSerializer(perfis, many=True)
+        perfis = Perfil.objects.all()
+        serializer = PerfilSerializer(perfis, many=True)
         return Response(data=serializer.data)
 
 
 class DetalhePerfilView(APIView):
-    class UserSerializer(serializers.ModelSerializer):
-        class PerfilSerializer(serializers.ModelSerializer):
-            class Meta:
-                model = Perfil
-                fields = ["peso"]
-
-        perfil = PerfilSerializer()
-
-        class Meta:
-            model = get_user_model()
-            fields = ["username", "nome", "perfil"]
-
     def get(self, request, username):
-        user = get_user_model().objects.get(username=username)
-        serializer = self.UserSerializer(user)
+        perfil = get_perfil(username)
+        if not perfil:
+            return Response("Usuário invalido", status=status.HTTP_400_BAD_REQUEST)
+        serializer = PerfilSerializer(perfil)
         return Response(serializer.data)
 
     def put(self, request, username):
-        user = get_user_model().objects.get(username=username)
-        if "nome" in request.data:
-            user.nome = request.data.get("nome")
-            user.save()
-        perfilSerializer = self.UserSerializer.PerfilSerializer(
-            user.perfil, data=request.data
-        )
-        userSerializer = self.UserSerializer(user)
+        perfil = get_perfil(username)
+        if not perfil:
+            return Response("Usuário invalido", status=status.HTTP_400_BAD_REQUEST)
+        perfilSerializer = PerfilSerializer(perfil, data=request.data, partial=True)
         if perfilSerializer.is_valid():
             perfil = perfilSerializer.save()
-            perfil.meta = perfil.calcular_meta()
-            perfil.save()
-            userSerializer = self.UserSerializer(user)
-            return Response(userSerializer.data)
+            if "meta" not in perfilSerializer.validated_data:
+                perfil.meta = perfil.calcular_meta()
+                perfil.save()
+            return Response(data=perfilSerializer.data)
         else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                data=perfilSerializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class RegistrarConsumoView(APIView):
-    class ConsumoSerializer(serializers.Serializer):
-        volume = serializers.IntegerField()
+    
 
     def post(self, request, username):
-        try:
-            user = get_user_model().objects.get(username=username)
-        except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        serializer = self.ConsumoSerializer(data=request.data)
+        perfil = get_perfil(username)
+        if not perfil:
+            return Response("Usuário invalido", status=status.HTTP_400_BAD_REQUEST)
+        serializer = ConsumoSerializer(data=request.data)
         hoje_min = datetime.datetime.combine(datetime.date.today(), datetime.time.min)
         hoje_max = datetime.datetime.combine(datetime.date.today(), datetime.time.max)
 
         if serializer.is_valid():
-            consumosDia = ConsumoDia.objects.filter(perfil=user.perfil).filter(
+            consumosDia = ConsumoDia.objects.filter(perfil=perfil).filter(
                 data__range=(hoje_min, hoje_max)
             )
             if consumosDia.exists():
                 consumoDia = consumosDia.first()
             else:
                 consumoDia = ConsumoDia.objects.create(
-                    perfil=user.perfil, consumo=0, data=datetime.date.today()
+                    perfil=perfil, consumo=0, data=datetime.date.today()
                 )
 
             consumo = Consumo.objects.create(
                 volume=serializer.validated_data["volume"], consumoDia=consumoDia
             )
             consumoDia.consumo += serializer.validated_data["volume"]
-            if consumoDia.consumo >= user.perfil.meta:
+            if consumoDia.consumo >= perfil.meta:
                 consumoDia.is_meta_atingida = True
             consumoDia.save()
 
@@ -150,43 +123,40 @@ class RegistrarConsumoView(APIView):
 
 
 class ResumoConsumoView(APIView):
-    class ResumoInputSerializer(serializers.Serializer):
-        data = serializers.DateField(
-            input_formats=["%Y-%m-%d", "iso-8601"], required=False
-        )
 
     def get(self, request, username, data=None):
-        try:
-            user = get_user_model().objects.get(username=username)
-        except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        serializer = self.ResumoInputSerializer(data=request.data)
-        if data and serializer.is_valid():
-            data = datetime.datetime.strptime(data, "%Y-%m-%d").date()
+        perfil = get_perfil(username)
+        if not perfil:
+            return Response("Usuário invalido", status=status.HTTP_400_BAD_REQUEST)
+        if data:
+            try:
+                data = datetime.datetime.strptime(data, "%Y-%m-%d").date()
+            except:
+                return Response("formato de data inválido", status=status.HTTP_400_BAD_REQUEST)
         else:
             data = datetime.date.today()
-        print(ConsumoDia.objects.all())
-        consumosDia = ConsumoDia.objects.filter(perfil=user.perfil).filter(
+        consumosDia = ConsumoDia.objects.filter(perfil=perfil).filter(
             data__year=data.year, data__month=data.month, data__day=data.day
         )
         if consumosDia.exists():
             consumoDia = consumosDia.first()
-            consumo_restante = user.perfil.meta - consumoDia.consumo
+            consumo_restante = perfil.meta - consumoDia.consumo
             if consumo_restante < 0:
                 consumo_restante = 0
 
-            porcentagem_consumida_da_meta = consumoDia.consumo / user.perfil.meta * 100
+            porcentagem_consumida_da_meta = consumoDia.consumo / perfil.meta * 100
             if porcentagem_consumida_da_meta > 100:
                 porcentagem_consumida_da_meta = 100
             return Response(
                 data={
-                    "meta": user.perfil.meta,
+                    "meta": perfil.meta,
                     "consumo": consumoDia.consumo,
                     "consumo_restante": consumo_restante,
                     "porcentagem_consumida_da_meta": round(
                         porcentagem_consumida_da_meta, 2
                     ),
                     "meta_atingida": consumoDia.is_meta_atingida,
+                    "data" : consumoDia.data.strftime("%d/%m/%Y")
                 },
             )
         else:
