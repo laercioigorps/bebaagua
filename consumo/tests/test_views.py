@@ -125,6 +125,8 @@ def test_report_de_consumo_hoje_meta_atingida(apiClient, perfil):
         reverse("consumo:consumir", kwargs={"username": perfil.username}),
         {"volume": 3500},
     )
+    perfil.meta = 2512
+    perfil.save()
 
     response = apiClient.get(
         reverse("consumo:resumo", kwargs={"username": perfil.username})
@@ -148,6 +150,7 @@ def test_report_de_consumo_anterior(apiClient, perfil):
         data=date(year=2023, month=1, day=1),
         is_meta_atingida=True,
         consumo=2600,
+        meta=2500
     )
 
     consumo_anterior = ConsumoDia.objects.create(
@@ -155,6 +158,7 @@ def test_report_de_consumo_anterior(apiClient, perfil):
         data=date(year=2023, month=1, day=2),
         is_meta_atingida=False,
         consumo=2301,
+        meta=2500
     )
 
     response = apiClient.get(

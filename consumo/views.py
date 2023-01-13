@@ -107,6 +107,7 @@ class RegistrarConsumoView(APIView):
                 volume=serializer.validated_data["volume"], consumoDia=consumoDia
             )
             consumoDia.consumo += serializer.validated_data["volume"]
+            consumoDia.meta = perfil.meta
             if consumoDia.consumo >= perfil.meta:
                 consumoDia.is_meta_atingida = True
             consumoDia.save()
@@ -149,7 +150,7 @@ class ResumoConsumoView(APIView):
                 porcentagem_consumida_da_meta = 100
             return Response(
                 data={
-                    "meta": perfil.meta,
+                    "meta": consumoDia.meta,
                     "consumo": consumoDia.consumo,
                     "consumo_restante": consumo_restante,
                     "porcentagem_consumida_da_meta": round(
