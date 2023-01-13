@@ -28,7 +28,7 @@ class RegistrarConsumoView(APIView):
             if(consumosDia.exists()):
                 consumoDia = consumosDia.first()
             else:
-                consumoDia = ConsumoDia.objects.create(perfil=user.perfil, consumo=0)
+                consumoDia = ConsumoDia.objects.create(perfil=user.perfil, consumo=0, data=datetime.date.today())
             
             consumo = Consumo.objects.create(volume=serializer.validated_data["volume"], consumoDia = consumoDia)
             consumoDia.consumo += serializer.validated_data["volume"]
@@ -45,15 +45,22 @@ class RegistrarConsumoView(APIView):
         
 
 class ResumoConsumoView(APIView):
-    def get(self, request, username):
+
+    class ResumoInputSerializer(serializers.Serializer):
+        data = serializers.DateField(input_formats=['%Y-%m-%d', 'iso-8601'], required=False)
+
+    def get(self, request, username, data=None):
         try:
             user = get_user_model().objects.get(username=username)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        
-        hoje_min = datetime.datetime.combine(datetime.date.today(), datetime.time.min)
-        hoje_max = datetime.datetime.combine(datetime.date.today(), datetime.time.max)
-        consumosDia = ConsumoDia.objects.filter(perfil=user.perfil).filter(data__range=(hoje_min, hoje_max))
+        serializer = self.ResumoInputSerializer(data=request.data)
+        if(data and serializer.is_valid()):
+            data = datetime.datetime.strptime(data, "%Y-%m-%d").date()
+        else:
+            data = datetime.date.today()
+        print(ConsumoDia.objects.all())
+        consumosDia = ConsumoDia.objects.filter(perfil=user.perfil).filter(data__year=data.year, data__month=data.month, data__day=data.day)
         if(consumosDia.exists()):
             consumoDia = consumosDia.first()
             consumo_restante = user.perfil.meta - consumoDia.consumo
@@ -68,7 +75,7 @@ class ResumoConsumoView(APIView):
                     "meta": user.perfil.meta,
                     "consumo" : consumoDia.consumo,
                     "consumo_restante" : consumo_restante,
-                    "porcentagem_consumida_da_meta" : porcentagem_consumida_da_meta,
+                    "porcentagem_consumida_da_meta" : round(float(porcentagem_consumida_da_meta), 2),
                     "meta_atingida" : consumoDia.is_meta_atingida
                 },
             )
