@@ -37,7 +37,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "perfil",
     "consumo",
     "rest_framework",
 ]
@@ -125,4 +124,4 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-AUTH_USER_MODEL = "perfil.User"
+AUTH_USER_MODEL = "consumo.User"

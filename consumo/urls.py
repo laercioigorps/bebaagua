@@ -1,10 +1,13 @@
 from django.urls import path
-from .views import RegistrarConsumoView, ResumoConsumoView
+from .views import RegistrarConsumoView, ResumoConsumoView, CriarPerfilView, ListarPerfisView, DetalhePerfilView
 
 app_name = "consumo"
 
 urlpatterns = [
-    path("copos/consumir/<str:username>/", view=RegistrarConsumoView.as_view(), name="consumir_copo"),
-    path("resumo/<str:username>/", view=ResumoConsumoView.as_view(), name="resumo"),
-    path("resumo/<str:username>/<str:data>/", view=ResumoConsumoView.as_view(), name="resumo_data"),
+    path("users/", view=CriarPerfilView.as_view(), name="criar_perfil"),
+    path("users/listar/", view=ListarPerfisView.as_view(), name="listar_perfis"),
+    path("users/<str:username>/", view=DetalhePerfilView.as_view(), name="detalhe_perfil"),
+    path("users/<str:username>/consumir/", view=RegistrarConsumoView.as_view(), name="consumir_copo"),
+    path("users/<str:username>/resumo/", view=ResumoConsumoView.as_view(), name="resumo"),
+    path("users/<str:username>/resumo/<str:data>/", view=ResumoConsumoView.as_view(), name="resumo_data"),
 ]

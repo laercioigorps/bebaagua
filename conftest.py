@@ -2,7 +2,7 @@ import pytest
 
 from rest_framework.test import APIRequestFactory, APIClient
 from django.contrib.auth import get_user_model
-from perfil.models import Perfil, User
+from consumo.models import Perfil, User
 
 @pytest.fixture
 def apirf():
