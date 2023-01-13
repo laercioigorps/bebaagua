@@ -75,7 +75,7 @@ class ResumoConsumoView(APIView):
                     "meta": user.perfil.meta,
                     "consumo" : consumoDia.consumo,
                     "consumo_restante" : consumo_restante,
-                    "porcentagem_consumida_da_meta" : round(float(porcentagem_consumida_da_meta), 2),
+                    "porcentagem_consumida_da_meta" : round(porcentagem_consumida_da_meta, 2),
                     "meta_atingida" : consumoDia.is_meta_atingida
                 },
             )
