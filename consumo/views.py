@@ -24,6 +24,23 @@ class ConsumoSerializer(serializers.Serializer):
     volume = serializers.IntegerField()
 
 
+class ConsumoDiaSerializer(serializers.ModelSerializer):
+
+    data = serializers.DateField(format="%d/%m/%Y")
+
+    class Meta:
+        model = ConsumoDia
+        fields = [
+            "perfil",
+            "data",
+            "meta",
+            "meta_atingida",
+            "consumo",
+            "consumo_restante",
+            "porcentagem_consumida_da_meta",
+        ]
+
+
 class CriarPerfilView(APIView):
     def post(self, request):
         perfilSerializer = PerfilSerializer(data=request.data)
@@ -107,23 +124,6 @@ class RegistrarConsumoView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
 
 
-class ConsumoDiaSerializer(serializers.ModelSerializer):
-
-    data = serializers.DateField(format="%d/%m/%Y")
-
-    class Meta:
-        model = ConsumoDia
-        fields = [
-            "perfil",
-            "data",
-            "meta",
-            "meta_atingida",
-            "consumo",
-            "consumo_restante",
-            "porcentagem_consumida_da_meta",
-        ]
-
-
 class ResumoConsumoView(APIView):
     def get(self, request, username, data=None):
         perfil = get_perfil(username)
@@ -143,9 +143,11 @@ class ResumoConsumoView(APIView):
             data__year=data.year, data__month=data.month, data__day=data.day
         )
         if consumosDia.exists():
-            consumoDia = consumosDia.first()     
+            consumoDia = consumosDia.first()
         else:
-            consumoDia = ConsumoDia(perfil=perfil, data=data, meta=perfil.meta, consumo=0)
+            consumoDia = ConsumoDia(
+                perfil=perfil, data=data, meta=perfil.meta, consumo=0
+            )
         consumoDiaSerializer = ConsumoDiaSerializer(consumoDia)
         return Response(
             data=consumoDiaSerializer.data,
