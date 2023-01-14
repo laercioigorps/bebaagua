@@ -164,3 +164,13 @@ class ResumoConsumoView(APIView):
             )
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+class HistoricoConsumoView(APIView):
+
+    def get(self, request, username):
+        perfil = get_perfil(username)
+        if not perfil:
+            return Response("Usuário invalido", status=status.HTTP_400_BAD_REQUEST)
+        consumosDiarios = ConsumoDia.objects.filter(perfil=perfil).order_by("-data")
+        serializer = ConsumoDiaSerializer(consumosDiarios, many=True)
+        return Response(data=serializer.data)

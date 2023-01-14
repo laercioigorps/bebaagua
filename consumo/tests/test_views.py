@@ -201,3 +201,48 @@ def test_report_de_consumo_anterior_com_data_invalida(apiClient, perfil):
         )
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+def test_get_historico_de_consumo_de_agua(apiClient, perfil):
+    consumoDia1 = ConsumoDia.objects.create(
+        perfil=perfil,
+        data=date(year=2023, month=1, day=1),
+        meta_atingida=True,
+        consumo=2600,
+        meta=2500
+    )
+    consumoDia2 = ConsumoDia.objects.create(
+        perfil=perfil,
+        data=date(year=2023, month=1, day=2),
+        meta_atingida=False,
+        consumo=2600,
+        meta=2700
+    )
+    consumoDia3 = ConsumoDia.objects.create(
+        perfil=perfil,
+        data=date(year=2023, month=1, day=3),
+        meta_atingida=True,
+        consumo=2700,
+        meta=2700
+    )
+
+    response = apiClient.get(
+        reverse(
+            "consumo:historico_consumo",
+            kwargs={
+                "username": perfil.username
+            },
+        )
+    )
+    data = response.data
+    assert response.status_code == status.HTTP_200_OK
+    assert len(data) == 3
+    assert response.data[0]["meta"] == 2700
+    assert response.data[0]["consumo"] == 2700
+    assert response.data[0]["consumo_restante"] == 0
+    assert response.data[0]["porcentagem_consumida_da_meta"] == 100
+    assert response.data[0]["meta_atingida"] == True
+    assert response.data[0]["data"] == "03/01/2023"
+
+
