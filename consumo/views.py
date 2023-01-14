@@ -1,12 +1,9 @@
-from django.shortcuts import render
 from rest_framework.views import APIView
 from .models import ConsumoDia, Consumo, Perfil
 from rest_framework import serializers
 from rest_framework.response import Response
-from django.contrib.auth import get_user_model
 from rest_framework import status
 import datetime
-from functools import cached_property
 
 # Create your views here.
 
@@ -81,12 +78,10 @@ class RegistrarConsumoView(APIView):
         if not perfil:
             return Response("Usuário invalido", status=status.HTTP_400_BAD_REQUEST)
         serializer = ConsumoSerializer(data=request.data)
-        hoje_min = datetime.datetime.combine(datetime.date.today(), datetime.time.min)
-        hoje_max = datetime.datetime.combine(datetime.date.today(), datetime.time.max)
-
+        data = datetime.date.today()
         if serializer.is_valid():
             consumosDia = ConsumoDia.objects.filter(perfil=perfil).filter(
-                data__range=(hoje_min, hoje_max)
+                data__year=data.year, data__month=data.month, data__day=data.day
             )
             if consumosDia.exists():
                 consumoDia = consumosDia.first()
@@ -94,7 +89,6 @@ class RegistrarConsumoView(APIView):
                 consumoDia = ConsumoDia.objects.create(
                     perfil=perfil, consumo=0, data=datetime.date.today()
                 )
-
             consumo = Consumo.objects.create(
                 volume=serializer.validated_data["volume"], consumoDia=consumoDia
             )
@@ -142,7 +136,8 @@ class ResumoConsumoView(APIView):
                 data = datetime.datetime.strptime(data, "%Y-%m-%d").date()
             except:
                 return Response(
-                    "formato de data inválido", status=status.HTTP_400_BAD_REQUEST
+                    "formato de data inválido(deveria ser y-m-d)",
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
         else:
             data = datetime.date.today()
@@ -158,8 +153,8 @@ class ResumoConsumoView(APIView):
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-class HistoricoConsumoView(APIView):
 
+class HistoricoConsumoView(APIView):
     def get(self, request, username):
         perfil = get_perfil(username)
         if not perfil:
