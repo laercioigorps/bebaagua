@@ -143,13 +143,13 @@ class ResumoConsumoView(APIView):
             data__year=data.year, data__month=data.month, data__day=data.day
         )
         if consumosDia.exists():
-            consumoDia = consumosDia.first()
-            consumoDiaSerializer = ConsumoDiaSerializer(consumoDia)
-            return Response(
-                data=consumoDiaSerializer.data,
-            )
+            consumoDia = consumosDia.first()     
         else:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            consumoDia = ConsumoDia(perfil=perfil, data=data, meta=perfil.meta, consumo=0)
+        consumoDiaSerializer = ConsumoDiaSerializer(consumoDia)
+        return Response(
+            data=consumoDiaSerializer.data,
+        )
 
 
 class HistoricoConsumoView(APIView):
