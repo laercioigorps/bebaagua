@@ -25,7 +25,6 @@ class ConsumoSerializer(serializers.Serializer):
 
 
 class ConsumoDiaSerializer(serializers.ModelSerializer):
-
     data = serializers.DateField(format="%d/%m/%Y")
 
     class Meta:

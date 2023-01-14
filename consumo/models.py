@@ -33,7 +33,7 @@ class ConsumoDia(models.Model):
         porcentagem = self.consumo / self.meta * 100
         if porcentagem > 100:
             porcentagem = 100
-        return porcentagem
+        return round(porcentagem, 2)
 
 
 class Consumo(models.Model):
