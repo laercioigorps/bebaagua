@@ -33,16 +33,9 @@ class CriarPerfilView(APIView):
     def post(self, request):
         perfilSerializer = PerfilSerializer(data=request.data)
         if perfilSerializer.is_valid():
-            try:
-                perfil = perfilSerializer.save()
-            except Exception:
-                return Response(
-                    status=status.HTTP_400_BAD_REQUEST,
-                    data={"erro": "usuário inválido"},
-                )
+            perfil = perfilSerializer.save()
             perfil.meta = perfil.calcular_meta()
             perfil.save()
-
             return Response(status=status.HTTP_201_CREATED, data=perfilSerializer.data)
         else:
             return Response(

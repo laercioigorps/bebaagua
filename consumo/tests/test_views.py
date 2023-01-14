@@ -17,6 +17,14 @@ def test_criar_perfil(apiClient):
     assert response.data["peso"] == "70.00"
     assert response.data["meta"] == 2450
 
+@pytest.mark.django_db
+def test_criar_perfil_duplicado(apiClient):
+    Perfil.objects.create(username="newusername", nome="outro", peso=70, meta = 3000)
+    data = {"username": "newusername", "nome": "newuser name", "peso": "70"}
+    response = apiClient.post(reverse("consumo:criar_perfil"), data)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert Perfil.objects.count() == 1
+
 
 @pytest.mark.django_db
 def test_listar_perfis(apiClient):
