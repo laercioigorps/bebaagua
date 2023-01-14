@@ -5,8 +5,6 @@ from rest_framework.response import Response
 from rest_framework import status
 import datetime
 
-# Create your views here.
-
 
 def get_perfil(username):
     try:
