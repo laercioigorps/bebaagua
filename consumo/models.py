@@ -16,11 +16,25 @@ class ConsumoDia(models.Model):
     perfil = models.ForeignKey(Perfil, on_delete=models.CASCADE)
     data = models.DateField()
     meta = models.PositiveIntegerField(default=0)
-    is_meta_atingida = models.BooleanField(default=False)
+    meta_atingida = models.BooleanField(default=False)
     consumo = models.PositiveIntegerField()
 
     def __str__(self) -> str:
         return self.data.strftime("%Y-%m-%d")
+
+    @property
+    def consumo_restante(self):
+        restante = self.meta - self.consumo
+        if restante < 0:
+            restante = 0
+        return restante
+
+    @property
+    def porcentagem_consumida_da_meta(self):
+        porcentagem = self.consumo / self.meta * 100
+        if porcentagem > 100:
+            porcentagem = 100
+        return porcentagem
 
 
 

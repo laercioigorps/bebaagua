@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from rest_framework import status
 import datetime
+from functools import cached_property
 
 # Create your views here.
 
@@ -25,7 +26,7 @@ class PerfilSerializer(serializers.ModelSerializer):
 
 
 class ConsumoSerializer(serializers.Serializer):
-        volume = serializers.IntegerField()
+    volume = serializers.IntegerField()
 
 
 class CriarPerfilView(APIView):
@@ -82,8 +83,6 @@ class DetalhePerfilView(APIView):
 
 
 class RegistrarConsumoView(APIView):
-    
-
     def post(self, request, username):
         perfil = get_perfil(username)
         if not perfil:
@@ -109,7 +108,7 @@ class RegistrarConsumoView(APIView):
             consumoDia.consumo += serializer.validated_data["volume"]
             consumoDia.meta = perfil.meta
             if consumoDia.consumo >= perfil.meta:
-                consumoDia.is_meta_atingida = True
+                consumoDia.meta_atingida = True
             consumoDia.save()
 
             return Response(
@@ -123,8 +122,24 @@ class RegistrarConsumoView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
 
 
-class ResumoConsumoView(APIView):
+class ConsumoDiaSerializer(serializers.ModelSerializer):
 
+    data = serializers.DateField(format="%d/%m/%Y")
+
+    class Meta:
+        model = ConsumoDia
+        fields = [
+            "perfil",
+            "data",
+            "meta",
+            "meta_atingida",
+            "consumo",
+            "consumo_restante",
+            "porcentagem_consumida_da_meta",
+        ]
+
+
+class ResumoConsumoView(APIView):
     def get(self, request, username, data=None):
         perfil = get_perfil(username)
         if not perfil:
@@ -133,7 +148,9 @@ class ResumoConsumoView(APIView):
             try:
                 data = datetime.datetime.strptime(data, "%Y-%m-%d").date()
             except:
-                return Response("formato de data inválido", status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    "formato de data inválido", status=status.HTTP_400_BAD_REQUEST
+                )
         else:
             data = datetime.date.today()
         consumosDia = ConsumoDia.objects.filter(perfil=perfil).filter(
@@ -141,24 +158,9 @@ class ResumoConsumoView(APIView):
         )
         if consumosDia.exists():
             consumoDia = consumosDia.first()
-            consumo_restante = perfil.meta - consumoDia.consumo
-            if consumo_restante < 0:
-                consumo_restante = 0
-
-            porcentagem_consumida_da_meta = consumoDia.consumo / perfil.meta * 100
-            if porcentagem_consumida_da_meta > 100:
-                porcentagem_consumida_da_meta = 100
+            consumoDiaSerializer = ConsumoDiaSerializer(consumoDia)
             return Response(
-                data={
-                    "meta": consumoDia.meta,
-                    "consumo": consumoDia.consumo,
-                    "consumo_restante": consumo_restante,
-                    "porcentagem_consumida_da_meta": round(
-                        porcentagem_consumida_da_meta, 2
-                    ),
-                    "meta_atingida": consumoDia.is_meta_atingida,
-                    "data" : consumoDia.data.strftime("%d/%m/%Y")
-                },
+                data=consumoDiaSerializer.data,
             )
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)

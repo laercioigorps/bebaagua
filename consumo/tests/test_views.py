@@ -109,7 +109,7 @@ def test_meta_consumoDia_atingida(apiClient, perfil):
 
     consumoDia = ConsumoDia.objects.all().filter(perfil=perfil).first()
 
-    assert consumoDia.is_meta_atingida == True
+    assert consumoDia.meta_atingida == True
 
 
 @pytest.mark.django_db
@@ -148,7 +148,7 @@ def test_report_de_consumo_anterior(apiClient, perfil):
     consumo_anterior = ConsumoDia.objects.create(
         perfil=perfil,
         data=date(year=2023, month=1, day=1),
-        is_meta_atingida=True,
+        meta_atingida=True,
         consumo=2600,
         meta=2500
     )
@@ -156,7 +156,7 @@ def test_report_de_consumo_anterior(apiClient, perfil):
     consumo_anterior = ConsumoDia.objects.create(
         perfil=perfil,
         data=date(year=2023, month=1, day=2),
-        is_meta_atingida=False,
+        meta_atingida=False,
         consumo=2301,
         meta=2500
     )
@@ -187,7 +187,7 @@ def test_report_de_consumo_anterior_com_data_invalida(apiClient, perfil):
     consumo_anterior = ConsumoDia.objects.create(
         perfil=perfil,
         data=date(year=2023, month=1, day=1),
-        is_meta_atingida=True,
+        meta_atingida=True,
         consumo=2600,
     )
 
